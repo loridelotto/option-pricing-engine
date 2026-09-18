@@ -21,3 +21,9 @@ def call_price(S, K, T, r, sigma):
     """
     return S * norm.cdf(_d1(S, K, T, r, sigma)) - K * np.exp(-r * T) * norm.cdf(_d2(S, K, T, r, sigma)
     )
+
+def put_price(S, K, T, r, sigma):
+    """Stessi parametri di call_price."""
+    return K * np.exp(-r * T) * norm.cdf(-_d2(S, K, T, r, sigma)) - S * norm.cdf(
+        -_d1(S, K, T, r, sigma)
+    )
