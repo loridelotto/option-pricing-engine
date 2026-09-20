@@ -13,7 +13,7 @@ CASES = [
 
 
 def _fd(f, x, h):
-    """Derivata numerica centrata: (f(x+h) - f(x-h)) / 2h."""
+    """numeric derivative: (f(x+h) - f(x-h)) / 2h."""
     return (f(x + h) - f(x - h)) / (2 * h)
 
 
