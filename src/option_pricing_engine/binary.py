@@ -27,9 +27,9 @@ def binomial_price(S, K, T, r, sigma, q=0.0, N=1000, kind="call", exercise="euro
             np.maximum(prices - K, 0.0) if kind == "call" else np.maximum(K - prices, 0.0)
         )
 
-    # livello terminale: S_j = S * u^j * d^(N-j), j = 0..N
-    j = np.arange(N + 1)
-    V = payoff(S * u**j * d ** (N - j))
+    # Price at time T: S_j = S * u^j * d^(N-j), j = 0..N
+    j = np.arange(N + 1)   # Number of up movements 
+    V = payoff(S * u**j * d ** (N - j)) # Option price at time T
 
     # induzione all'indietro: V ha i+1 elementi al passo i
     for i in range(N - 1, -1, -1):
