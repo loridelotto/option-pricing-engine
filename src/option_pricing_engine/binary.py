@@ -31,11 +31,24 @@ def binomial_price(S, K, T, r, sigma, q=0.0, N=1000, kind="call", exercise="euro
     j = np.arange(N + 1)   # Number of up movements 
     V = payoff(S * u**j * d ** (N - j)) # Option price at time T
 
-    # induzione all'indietro: V ha i+1 elementi al passo i
+    # backwards induction and greeks calculation
+    kept = {}
     for i in range(N - 1, -1, -1):
         V = disc * (p * V[1:] + (1.0 - p) * V[:-1])
         if exercise == "american":
             jj = np.arange(i + 1)
             V = np.maximum(V, payoff(S * u**jj * d ** (i - jj)))
+        if i <= 2:
+            kept[i] = V.copy()
 
-    return V[0]
+    V0, V1, V2 = kept[0], kept[1], kept[2]
+    S1 = S * np.array([d, u])
+    S2 = S * np.array([d * d, 1.0, u * u])     
+
+    delta = (V1[1] - V1[0]) / (S1[1] - S1[0])
+    slope_up = (V2[2] - V2[1]) / (S2[2] - S2[1])
+    slope_dn = (V2[1] - V2[0]) / (S2[1] - S2[0])
+    gamma = (slope_up - slope_dn) / (0.5 * (S2[2] - S2[0]))
+    theta = (V2[1] - V0[0]) / (2.0 * dt)         
+
+    return {"price": V0[0], "delta": delta, "gamma": gamma, "theta": theta}
