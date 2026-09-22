@@ -18,16 +18,21 @@ def monte_carlo_price(S, K, T, r, sigma, q = 0.0, n_paths = 100000, kind = "call
     disc = np.exp(-r * T)
 
     if antithetic:
-        n_pairs = n_paths // 2
+        n_eff = n_paths // 2
         z = rng.standard_normal(n_pairs)
-        up = _payoff(terminal_prices(S, T, r, sigma, q, z), K, kind)
-        down = _payoff(terminal_prices(S, T, r, sigma, q, -z), K, kind)
-        samples = disc * 0.5 * (up+down)
-        n_eff = n_pairs
+        s_up, s_down = (terminal_prices(S, T, r, sigma, q, w) for w in (z, -z))
+        samples = disc * 0.5 * (_payoff(s_up, K, kind) +_payoff(s_down, K, kind))
+        control_samples = disc * 0.5 * (s_up + s_down)
     else:
-        z = rng.standard_normal(n_paths)
-        samples = disc * _payoff(terminal_prices(S, T, r, sigma, q, -z), K, kind)
         n_eff = n_paths
+        s_t = terminal_prices(S, T, r, sigma, q, rng.standard_normal(n_eff))
+        samples = disc * _payoff(s_t, K, kind)
+        control_samples = disc * s_t
+
+        if control:
+        expected = S * np.exp(-q * T)                   
+        c = np.cov(samples, control_samples, ddof=1)[0, 1] / np.var(control_samples, ddof=1)
+        samples = samples - c * (control_samples - expected)
 
     price = samples.mean()
     stderr = samples.std(ddof=1) / np.sqrt(n_eff)
