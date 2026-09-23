@@ -12,7 +12,7 @@ def _payoff(prices, K, kind):
 
 def _summary(samples, n_eff, confidence):
     mean = samples.mean()
-    stderr = samples.std(ddor = 1) / np.sqrt(n_eff)
+    stderr = samples.std(ddof = 1) / np.sqrt(n_eff)
     half_width = norm.ppf(0.5 + confidence / 2) * stderr
     return mean, stderr, (mean - half_width, mean + half_width)
 
@@ -22,7 +22,7 @@ def monte_carlo_price(S, K, T, r, sigma, q = 0.0, n_paths = DEFAULT_PATHS, kind 
     if n_paths < 2:
         raise ValueError("you need at least 2 paths")
 
-    rng = np.random.defauld_rng(seed)
+    rng = np.random.default_rng(seed)
     disc = np.exp(-r * T)
 
     if antithetic:
@@ -38,13 +38,9 @@ def monte_carlo_price(S, K, T, r, sigma, q = 0.0, n_paths = DEFAULT_PATHS, kind 
         control_samples = disc * s_t
 
     if control:
-        expected = S * np.exp(-q * T)                   
+        expected = S * np.exp(-q * T)
         c = np.cov(samples, control_samples, ddof=1)[0, 1] / np.var(control_samples, ddof=1)
         samples = samples - c * (control_samples - expected)
-
-    price = samples.mean()
-    stderr = samples.std(ddof=1) / np.sqrt(n_eff)
-    half_width = norm.ppf(0.5 + confidence / 2) * stderr
 
     price, stderr, (lo, hi) = _summary(samples, n_eff, confidence)
     return {
@@ -63,8 +59,7 @@ def pathwise_greeks(S, K, T, r, sigma, q=0.0, n_paths = DEFAULT_PATHS, kind = "c
     estimators = {
         "price": disc * payoff,
         "delta": disc * dpayoff * (s_t / S),
-        "vega": disc * dpayoff * s_t
-                * (np.log(s_t / S) - (r - q + 0.5 * sigma**2) * T) / sigma,
+        "vega": disc * dpayoff * s_t * (np.log(s_t / S) - (r - q + 0.5 * sigma**2) * T) / sigma,
         "rho": disc * (dpayoff * s_t * T - T * payoff),
     }
 
@@ -74,4 +69,4 @@ def pathwise_greeks(S, K, T, r, sigma, q=0.0, n_paths = DEFAULT_PATHS, kind = "c
         out[name] = value
         out[f"{name}_se"] = stderr
         out[f"{name}_ci"] = ci
-    return out
+    return out  
